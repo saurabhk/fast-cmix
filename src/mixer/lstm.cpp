@@ -28,6 +28,11 @@ Lstm::Lstm(unsigned int input_size, unsigned int output_size, unsigned int
         layer_input_[0][i].size() + output_size, input_size_, output_size_,
         num_cells, horizon, gradient_clip, learning_rate)));
   }
+  //LoadFromDisk("lstm.dat");
+}
+
+Lstm::~Lstm() {
+  //SaveToDisk("lstm.dat");
 }
 
 void Lstm::SaveToDisk(const std::string& path) {

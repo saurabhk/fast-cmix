@@ -1,7 +1,7 @@
 #include "context-manager.h"
 
 ContextManager::ContextManager() : history_(100000000, 0),
-    shared_map_(256*8000000, 0), words_(8, 0), recent_bytes_(8, 0) {}
+    shared_map_(256*500000, 0), words_(8, 0), recent_bytes_(8, 0) {}
 
 const Context& ContextManager::AddContext(std::unique_ptr<Context> context) {
   for (const auto& old : contexts_) {
@@ -28,12 +28,11 @@ void ContextManager::UpdateHistory() {
 
 void ContextManager::UpdateWords() {
   unsigned char c = bit_context_;
-  if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c >= 0x80) {
+  if ((c >= 'a' && c <= 'z') || c >= 0x80) {
     words_[7] = words_[7] * 997*16 + c;
   } else {
     words_[7] = 0;
   }
-  if (c >= 'A' && c <= 'Z') c += 'a' - 'A';
   if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == 8 || c == 6 ||
       c >= 0x80) {
     words_[0] = words_[0] * 997*16 + c;

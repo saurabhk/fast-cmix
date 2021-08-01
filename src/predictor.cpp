@@ -5,7 +5,6 @@
 #include "models/match.h"
 #include "models/ppmd.h"
 #include "models/bracket.h"
-#include "models/paq8.h"
 #include "models/paq8hp.h"
 #include "mixer/lstm.h"
 #include "contexts/context-hash.h"
@@ -31,10 +30,8 @@ Predictor::Predictor(const std::vector<bool>& vocab) : manager_(),
 
   AddBracket();
   AddPAQ8HP();
-//  AddPAQ8();
   AddPPMD();
   AddWord();
-  AddDirect();
   AddMatch();
   AddDoubleIndirect();
   AddMixers();
@@ -79,13 +76,7 @@ void Predictor::AddAuxiliary() {
 }
 
 void Predictor::AddPAQ8HP() {
-  PAQ8HP* paq = new PAQ8HP(10);
-  AddModel(paq);
-  AddAuxiliary();
-}
-
-void Predictor::AddPAQ8() {
-  PAQ8* paq = new PAQ8(10);
+  PAQ8HP* paq = new PAQ8HP(9);
   AddModel(paq);
   AddAuxiliary();
 }
@@ -101,8 +92,7 @@ void Predictor::AddBracket() {
 }
 
 void Predictor::AddPPMD() {
-  AddByteModel(new PPMD::PPMD(6, 850, manager_.bit_context_, vocab_));
-  AddByteModel(new PPMD::PPMD(16, 850, manager_.bit_context_, vocab_));
+  AddByteModel(new PPMD::PPMD(25, 14000, manager_.bit_context_, vocab_));
 }
 
 void Predictor::AddWord() {
@@ -124,29 +114,10 @@ void Predictor::AddWord() {
     std::unique_ptr<Context> hash(new Sparse(manager_.words_, params));
     const Context& context = manager_.AddContext(std::move(hash));
     AddModel(new Match(manager_.history_, context.GetContext(),
-        manager_.bit_context_, 200, 0.5, 10000000, &(manager_.longest_match_)));
+        manager_.bit_context_, 200, 0.5, 2000000, &(manager_.longest_match_)));
     if (params[0] == 1 && params.size() == 1) {
       AddModel(new Indirect(manager_.run_map_, context.GetContext(),
           manager_.bit_context_, delta, manager_.shared_map_));
-      AddModel(new DirectHash(context.GetContext(), manager_.bit_context_, 30,
-          0, 500000));
-    }
-  }
-}
-
-void Predictor::AddDirect() {
-  float delta = 0;
-  int limit = 30;
-  std::vector<std::vector<int>> model_params = {{0, 8}, {1, 8}, {2, 8}, {3, 8}};
-  for (const auto& params : model_params) {
-    const Context& context = manager_.AddContext(std::unique_ptr<Context>(
-        new ContextHash(manager_.bit_context_,params[0], params[1])));
-    if (params[0] < 3) {
-      AddModel(new Direct(context.GetContext(), manager_.bit_context_, limit,
-          delta, context.Size()));
-    } else {
-      AddModel(new DirectHash(context.GetContext(), manager_.bit_context_,
-          limit, delta, 100000));
     }
   }
 }
@@ -154,7 +125,7 @@ void Predictor::AddDirect() {
 void Predictor::AddMatch() {
   float delta = 0.5;
   int limit = 200;
-  unsigned long long max_size = 20000000;
+  unsigned long long max_size = 2000000;
   std::vector<std::vector<int>> model_params = {{0, 8}, {1, 8}, {2, 8}, {7, 4},
       {11, 3}, {13, 2}, {15, 2}, {17, 2}, {20, 1}, {25, 1}};
 
@@ -186,12 +157,11 @@ void Predictor::AddMixers() {
   for (unsigned int i = 0; i < vocab_.size(); ++i) {
     if (vocab_[i]) ++vocab_size;
   }
-//  std::cout << "Vocab size" << vocab_size << std::endl;
   AddByteMixer(new ByteMixer(byte_models_.size(), manager_.bit_context_, vocab_,
       vocab_size, new Lstm(vocab_size, vocab_size, 200, 1, 128, 0.03, 10)));
   AddAuxiliary();
 
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 2; ++i) {
     layers_.push_back(std::unique_ptr<MixerInput>(new MixerInput(sigmoid_,
         1.0e-4)));
     mixers_.push_back(std::vector<std::unique_ptr<Mixer>>());
@@ -211,10 +181,6 @@ void Predictor::AddMixers() {
     AddMixer(0, bit_context.GetContext(), params[2]);
   }
 
-  model_params = {{0, 0.001}, {2, 0.002}, {3, 0.005}};
-  for (const auto& params : model_params) {
-    AddMixer(0, manager_.recent_bytes_[params[0]], params[1]);
-  }
   AddMixer(0, manager_.zero_context_, 0.00005);
   AddMixer(0, manager_.line_break_, 0.0007);
   AddMixer(0, manager_.longest_match_, 0.0005);
@@ -242,7 +208,6 @@ void Predictor::AddMixers() {
 
   for (int i = 0; i < 256; ++i) map[i] = 0;
   for (int i = 'a'; i <= 'z'; ++i) map[i] = 1;
-  for (int i = 'A'; i <= 'Z'; ++i) map[i] = 1;
   for (int i = '0'; i <= '9'; ++i) map[i] = 1;
   for (int i = 0x80; i < 256; ++i) map[i] = 1;
   const Context& interval3 = manager_.AddContext(std::unique_ptr<Context>(
@@ -284,12 +249,6 @@ void Predictor::AddMixers() {
   const Context& interval7 = manager_.AddContext(std::unique_ptr<Context>(
       new IntervalHash(manager_.bit_context_, map, 8, 7, 2)));
   AddMixer(0, interval7.GetContext(), 0.001);
-  const Context& interval9 = manager_.AddContext(std::unique_ptr<Context>(
-      new Interval(manager_.bit_context_, map, 7)));
-  const BitContext& bit_context6 = manager_.AddBitContext(std::unique_ptr
-      <BitContext>(new BitContext(manager_.long_bit_context_,
-      interval9.GetContext(), interval9.Size())));
-  AddMixer(0, bit_context6.GetContext(), 0.005);
 
   const BitContext& bit_context1 = manager_.AddBitContext(std::unique_ptr
       <BitContext>(new BitContext(manager_.long_bit_context_,
@@ -308,31 +267,7 @@ void Predictor::AddMixers() {
 
   input_size = mixers_[0].size() + auxiliary_.size();
   layers_[1]->SetNumModels(input_size);
-
-//  AddMixer(1, manager_.zero_context_, 0.005);
-//  AddMixer(1, manager_.zero_context_, 0.0005);
-//  AddMixer(1, manager_.long_bit_context_, 0.005);
-//  AddMixer(1, manager_.long_bit_context_, 0.0005);
-//  AddMixer(1, manager_.long_bit_context_, 0.00001);
-//  AddMixer(1, manager_.recent_bytes_[0], 0.005);
-//  AddMixer(1, manager_.recent_bytes_[1], 0.005);
-//  AddMixer(1, manager_.recent_bytes_[2], 0.005);
-//  AddMixer(1, manager_.longest_match_, 0.0005);
-//  AddMixer(1, manager_.wrt_context_, 0.002);
-//  AddMixer(1, interval1.GetContext(), 0.001);
-//  AddMixer(1, interval2.GetContext(), 0.001);
-//  AddMixer(1, interval3.GetContext(), 0.001);
-//  AddMixer(1, interval4.GetContext(), 0.001);
-//  AddMixer(1, interval5.GetContext(), 0.001);
-//  AddMixer(1, interval6.GetContext(), 0.001);
-//  AddMixer(1, interval7.GetContext(), 0.001);
-//  AddMixer(1, bit_context4.GetContext(), 0.001);
-//  AddMixer(1, bit_context5.GetContext(), 0.001);
-//  AddMixer(1, bit_context6.GetContext(), 0.001);
-
-  input_size = mixers_[0].size() + mixers_[1].size() + auxiliary_.size();
-  layers_[2]->SetNumModels(input_size);
-  AddMixer(2, manager_.zero_context_, 0.0003);
+  AddMixer(1, manager_.zero_context_, 0.0003);
 }
 
 float Predictor::Predict() {
@@ -373,21 +308,13 @@ float Predictor::Predict() {
     float p = mixers_[0][i]->Mix();
     layers_[0]->SetExtraInput(p);
     layers_[1]->SetStretchedInput(i, p);
-    layers_[2]->SetStretchedInput(i, p);
   }
   layers_[0]->ClearExtraInputs();
   for (unsigned int i = 0; i < auxiliary_.size(); ++i) {
     float p = layers_[0]->Inputs()[auxiliary_[i]];
     layers_[1]->SetStretchedInput(mixers_[0].size() + i, p);
-    layers_[2]->SetStretchedInput(mixers_[0].size() + mixers_[1].size() + i, p);
   }
-  for (unsigned int i = 0; i < mixers_[1].size(); ++i) {
-    float p = mixers_[1][i]->Mix();
-    layers_[1]->SetExtraInput(p);
-    layers_[2]->SetStretchedInput(mixers_[0].size() + i, p);
-  }
-  layers_[1]->ClearExtraInputs();
-  float p = Sigmoid::Logistic(mixers_[2][0]->Mix());
+  float p = Sigmoid::Logistic(mixers_[1][0]->Mix());
   p = sse_.Predict(p);
   if (byte_mixer_override >= 0) {
     return byte_mixer_override;

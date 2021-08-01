@@ -196,11 +196,20 @@ unsigned char Dictionary::Decode(FILE* input) {
   return next;
 }
 
+unsigned char NextChar(FILE* input) {
+  int c = getc(input);
+  if (c>='{' && c<127) c+='P'-'{';
+  else if (c>='P' && c<'T') c-='P'-'{';
+  else if ( (c>=':' && c<='?') || (c>='J' && c<='O') ) c^=0x70;
+  if (c=='X' || c=='`') c^='X'^'`';
+  return c;
+}
+
 void Dictionary::AddToBuffer(FILE* input) {
-  unsigned char c = getc(input);
+  unsigned char c = NextChar(input);
   if (c == kEscape) {
     decode_upper_ = false;
-    output_buffer_.push_back(getc(input));
+    output_buffer_.push_back(NextChar(input));
   } else if (c == kQuote) {
     for (int i = 1; i < 6; ++i) {
       output_buffer_.push_back(kQuoteStr[i]);
@@ -214,10 +223,10 @@ void Dictionary::AddToBuffer(FILE* input) {
   } else if (c >= 0x80) {
     unsigned int bytes = c;
     if (c > 0xCF) {
-      c = getc(input);
+      c = NextChar(input);
       bytes += c << 8;
       if (c > 0xCF) {
-        c = getc(input);
+        c = NextChar(input);
         bytes += c << 16;
       }
     }

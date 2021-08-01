@@ -14,12 +14,24 @@ Mixer::Mixer(const std::valarray<float>& inputs,
     {}
 
 ContextData* Mixer::GetContextData() {
-  ContextData* data = context_map_[context_].get();
-  if (data == nullptr) {
-    context_map_[context_] = std::unique_ptr<ContextData>(
-        new ContextData(inputs_.size(), extra_inputs_.size()));
+  ContextData* data;
+  unsigned long long limit = 10000;
+  if (context_map_.size() >= limit && context_map_.find(context_) == context_map_.end()) {
+    data = context_map_[0xDEADBEEF].get();
+    if (data == nullptr) {
+      context_map_[0xDEADBEEF] = std::unique_ptr<ContextData>(
+          new ContextData(inputs_.size(), extra_inputs_.size()));
+      data = context_map_[0xDEADBEEF].get();
+    }
+  } else {
     data = context_map_[context_].get();
+    if (data == nullptr) {
+      context_map_[context_] = std::unique_ptr<ContextData>(
+          new ContextData(inputs_.size(), extra_inputs_.size()));
+      data = context_map_[context_].get();
+    }
   }
+
   return data;
 }
 
