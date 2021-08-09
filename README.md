@@ -6,29 +6,39 @@ v1 submitted on June 10, 2021.
 
 v2 submitted on August 1, 2021. v2 is faster than v1, but has worse compression rate.
 
+v3 submitted on August 9, 2021. v3 gets a slightly better compression rate than v2 (but is slower). v2 was not above the 1% improvement threshold on a testing computer.
+
 # Submission Description
 This submission contains some small modifications on top of the recent [STARLIT](https://github.com/amargaritov/starlit) Hutter Prize winner.
 
-Below is the cmix-hp v2 result:
+Below is the cmix-hp v3 result:
 
 | Metric | Value |
 | --- | ----------- |
-| cmix-hp compressor's executable file size (S1)| 396779 bytes |
-| cmix-hp self-extracting archive size (S2)| 113760510 bytes |
-| Total size (S) | 114157289 bytes |
+| cmix-hp compressor's executable file size (S1)| 396929 bytes |
+| cmix-hp self-extracting archive size (S2)| 113733212 bytes |
+| Total size (S) | 114130141 bytes |
 | Previous record (L) | 115352938 bytes |
-| cmix-hp improvement (1 - S/L) | 1.04% |
+| cmix-hp improvement (1 - S/L) | 1.06% |
 
 | Experiment platform |  |
 | --- | ----------- |
 | Operating system | Ubuntu 20.04 |
 | Processor | Intel Core i7-7700K @ 4.20GHz (Geekbench score 1288) |
 | Memory | 32 GB DDR4 |
-| Decompression running time | 41.94 hours |
-| Decompression RAM max usage | 6881 MiB |
+| Decompression running time | 42.8 hours |
+| Decompression RAM max usage | 6905 MiB |
 | Decompression disk usage | ~35GB |
 
-Time, disk, and RAM usage are approximately symmetric for compression and decompression. STARLIT ran in 44.13 hours on this computer. cmix-hp v1 ran in 45.44 hours, with S1=397242 and S2=113688192.
+Time, disk, and RAM usage are approximately symmetric for compression and decompression.
+
+Here is a comparison between different entries on this computer:
+
+| Name | running time (hours) | S1 | S2 |
+| STARLIT | 44.13 | 401264 | 114920105 |
+| cmix-hp v1 | 45.44 | 397242 | 113688192 |
+| cmix-hp v2 | 41.94 | 396779 | 113760510 |
+| cmix-hp v3 | 42.8 | 396929 | 113733212 |
 
 # cmix-hp algorithm description
 The submission has several small tweaks on top of STARLIT. The most substantial change is to have a huge PPM model, which gets swapped to disk to improve memory usage.
@@ -53,6 +63,9 @@ Thanks to Kaido Orav for these suggested improvements:
 * Swapped certain byte regions during preprocessing - a trick originally used in PAQ8HP.
 * Improved handling of zero state in PAQ8HP mixer.
 * Better handling of UTF characters in PAQ8HP.
+
+# Changes for v3
+* Added back two of the cmix context mixers (which were removed in v2).
 
 # Instructions
 The installation and usage instructions for cmix-hp are the same as for STARLIT. For convenience, most of the information below is copied from STARLIT documentation.
@@ -93,14 +106,14 @@ cmix -e <PATH_TO_ENWIK9> enwik9.comp
 
 Expected output:
 ```
-78115 bytes -> 415377 bytes in 74.63 s.
-199796 bytes -> 1131233 bytes in 177.11 s.
+78125 bytes -> 415377 bytes in 74.17 s.
+199784 bytes -> 1131233 bytes in 184.88 s.
 Detected block types: TEXT: 100.0%
-934188796 bytes -> 113563527 bytes in 152012.69 s.
-munmap_chunk(): invalid pointer
+934188796 bytes -> 113536067 bytes in 155972.59 s.
+free(): invalid size
 Command terminated by signal 6
 ```
-The invalid pointer error does not affect the compression validity.
+The error message does not affect the compression validity.
 
 # Running cmix-hp decompressor
 The compressor is expected to output an executable file named `archive9` in the same directory (`./run`). The file `archive9` when executed is expected to reproduce the original enwik9 as a file named `enwik9_restored`. The executable file `archive9` should be launched without argments from the directory containing it. 
@@ -111,8 +124,8 @@ cd ./run
 
 Expected output:
 ```
-78115 bytes -> 415377 bytes in 70.57 s.
-113563527 bytes -> 934188796 bytes in 150911.54 s.
+78125 bytes -> 415377 bytes in 72.31 s.
+113536067 bytes -> 934188796 bytes in 154012.40 s.
 ```
 
 # Acknowelegments

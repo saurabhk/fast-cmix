@@ -181,6 +181,7 @@ void Predictor::AddMixers() {
     AddMixer(0, bit_context.GetContext(), params[2]);
   }
 
+  AddMixer(0, manager_.recent_bytes_[2], 0.002);
   AddMixer(0, manager_.zero_context_, 0.00005);
   AddMixer(0, manager_.line_break_, 0.0007);
   AddMixer(0, manager_.longest_match_, 0.0005);
@@ -249,6 +250,12 @@ void Predictor::AddMixers() {
   const Context& interval7 = manager_.AddContext(std::unique_ptr<Context>(
       new IntervalHash(manager_.bit_context_, map, 8, 7, 2)));
   AddMixer(0, interval7.GetContext(), 0.001);
+  const Context& interval9 = manager_.AddContext(std::unique_ptr<Context>(
+      new Interval(manager_.bit_context_, map, 7)));
+  const BitContext& bit_context6 = manager_.AddBitContext(std::unique_ptr
+      <BitContext>(new BitContext(manager_.long_bit_context_,
+      interval9.GetContext(), interval9.Size())));
+  AddMixer(0, bit_context6.GetContext(), 0.005);
 
   const BitContext& bit_context1 = manager_.AddBitContext(std::unique_ptr
       <BitContext>(new BitContext(manager_.long_bit_context_,
