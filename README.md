@@ -35,6 +35,7 @@ Time, disk, and RAM usage are approximately symmetric for compression and decomp
 Here is a comparison between different entries on this computer:
 
 | Name | running time (hours) | S1 | S2 |
+| --- | --- | --- | --- |
 | STARLIT | 44.13 | 401264 | 114920105 |
 | cmix-hp v1 | 45.44 | 397242 | 113688192 |
 | cmix-hp v2 | 41.94 | 396779 | 113760510 |
