@@ -15,7 +15,7 @@ make CFLAGS_DEFINES="$CFLAGS_DEFINES" prof_gen -j
 
 ./cmix -c ./prof_input/input ./prof_comp > ./prof_output
 rm ./prof_comp ./prof_output 
-llvm-profdata-12 merge -output=default.profdata ./pgo_data/*
+llvm-profdata-13 merge -output=default.profdata ./pgo_data/*
 mv default.profdata pgo_data/
 
 make CFLAGS_DEFINES="$CFLAGS_DEFINES" prof_use -j
@@ -32,7 +32,7 @@ git diff > $DIR/patch
 pushd $DIR
 # creating a compressed version of dictionary
 ./cmix_orig -c $ROOT/dictionary/english.dic ./comp_dict
-# creating a compressed verions of a file with new order 
+# creating a compressed verions of a file with new order
 ./cmix_orig -c $ROOT/src/readalike_prepr/data/new_article_order ./comp_order
 # creating a header with size of the above files
 ./cmix_orig -h $(wc -c ./comp_dict | awk '{print $1}') $(wc -c ./comp_order | awk '{print $1}') 0

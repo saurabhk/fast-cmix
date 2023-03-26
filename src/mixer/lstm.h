@@ -8,6 +8,9 @@
 
 #include "lstm-layer.h"
 
+#include "../ds/emhash_set.hpp"
+#include "../ds/SmallVector.h"
+
 class Lstm {
  public:
   Lstm(unsigned int input_size, unsigned int output_size, unsigned int
@@ -21,15 +24,17 @@ class Lstm {
   void LoadFromDisk(const std::string& path);
 
  private:
-  std::vector<std::unique_ptr<LstmLayer>> layers_;
-  std::vector<unsigned int> input_history_;
+  llvm::SmallVector<LstmLayer, 1> layers_;
+  std::vector<uint8_t> input_history_; // horizon
   std::valarray<float> hidden_, hidden_error_;
   std::valarray<std::valarray<std::valarray<float>>> layer_input_,
       output_layer_;
   std::valarray<std::valarray<float>> output_;
   float learning_rate_;
   unsigned int num_cells_, epoch_, horizon_, input_size_, output_size_;
+  int last_input_ = -1;
 };
-
+#include "lstm.hpp"
 #endif
+
 

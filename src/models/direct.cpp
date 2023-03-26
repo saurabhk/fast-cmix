@@ -12,7 +12,7 @@ Direct::Direct(const unsigned long long& byte_context,
   }
 }
 
-const std::valarray<float>& Direct::Predict() {
+const std::valarray<float>& Direct::Predict() const {
   outputs_[0] = predictions_[byte_context_][bit_context_];
   return outputs_;
 }
@@ -26,3 +26,4 @@ void Direct::Perceive(int bit) {
   predictions_[byte_context_][bit_context_] +=
       (bit - predictions_[byte_context_][bit_context_]) * divisor;
 }
+

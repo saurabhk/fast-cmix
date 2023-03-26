@@ -18,8 +18,7 @@ void Interval::Update() {
   context_ = mask_ & ((context_ << shift_) + map_[byte_]);
 }
 
-bool Interval::IsEqual(Context* c) {
-  Interval* p = dynamic_cast<Interval*>(c);
+bool Interval::IsEqual(Interval* p) const {
   if (!p) return false;
   if (p->size_ != size_) return false;
   for (int i = 0; i < 256; ++i) {
@@ -27,3 +26,4 @@ bool Interval::IsEqual(Context* c) {
   }
   return true;
 }
+

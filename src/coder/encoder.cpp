@@ -4,7 +4,7 @@ Encoder::Encoder(std::ofstream* os, Predictor* p) : os_(os), x1_(0),
     x2_(0xffffffff), p_(p) {}
 
 void Encoder::WriteByte(unsigned int byte) {
-  os_->put(byte);
+  out_.push_back(byte);
 }
 
 unsigned int Encoder::Discretize(float p) {
@@ -36,4 +36,8 @@ void Encoder::Flush() {
     x2_ = (x2_ << 8) + 255;
   }
   WriteByte(x2_ >> 24);
+
+  auto* data = reinterpret_cast<const char*>(out_.data());
+  os_->write(data, out_.size());
 }
+

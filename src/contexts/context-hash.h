@@ -8,7 +8,7 @@ class ContextHash : public Context {
   ContextHash(const unsigned int& bit_context, unsigned int order,
       unsigned int hash_size);
   void Update();
-  bool IsEqual(Context* c);
+  bool IsEqual(Context* c) const;
 
  private:
   const unsigned int& byte_;
@@ -16,3 +16,4 @@ class ContextHash : public Context {
 };
 
 #endif
+

@@ -156,7 +156,7 @@ int reorder() {
   for(int i = 0; i < positions.size(); i++) {
     int pos = positions[i];
     for(int j = vec[pos].start; j <= vec[pos].end; j++) {
-      out << lines[j] << std::endl;
+      out << lines[j] << "\n";
     }
   } 
   out.close();
@@ -221,7 +221,7 @@ int sort() {
   }
   for(int i =0; i < vec.size(); i++) {
     for(int j = vec[i].start; j <= vec[i].end; j++) {
-      out << lines[j] << std::endl;
+      out << lines[j] << "\n";
     }
   } 
   out.close();

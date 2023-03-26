@@ -10,7 +10,7 @@ class Sparse : public Context {
   Sparse(const std::vector<unsigned long long>& recent_contexts,
       const std::vector<unsigned int>& orders);
   void Update();
-  bool IsEqual(Context* c);
+  bool IsEqual(Context* c) const;
 
  private:
   const std::vector<unsigned long long>& recent_contexts_;
@@ -18,3 +18,4 @@ class Sparse : public Context {
 };
 
 #endif
+

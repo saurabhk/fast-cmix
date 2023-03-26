@@ -424,7 +424,6 @@ bool sed(std::string old_pattern, std::string new_pattern, char const * filename
   std::ofstream ofile(filename_to); 
 
   std::string s;
-//  std::cout << "I am in sed() " << filename_from << std::endl << std::flush; //debug
   while (std::getline(ifile, s)) {
     replace(s, old_pattern, new_pattern);
     ofile << s << std::endl;

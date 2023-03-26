@@ -1,3 +1,6 @@
+# fast cmix-hp
+A faster version of cmix-hp. All the compile/run instructions below stay applicable.
+
 # cmix-hp
 
 Submission for the [Hutter Prize](http://prize.hutter1.net/).

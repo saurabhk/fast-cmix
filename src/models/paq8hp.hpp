@@ -28,6 +28,7 @@
 #include <ctype.h>
 #include <algorithm>
 #include <unordered_map>
+#include "../ds/emhash_map.hpp"
 #include <memory>
 #include <sys/mman.h>
 #define NDEBUG
@@ -51,7 +52,7 @@ inline int min(int a, int b) {return a<b?a:b;}
 inline int max(int a, int b) {return a<b?b:a;}
 #endif
 
-void quit(const char* message=0) {}
+inline void quit(const char* message=0) {}
 
 typedef enum {DEFAULT, JPEG, EXE, BINTEXT, TEXT } Filetype;
 
@@ -174,9 +175,10 @@ public:
   U32 operator()() {
     return ++i, table[i&63]=table[(i-24)&63]^table[(i-55)&63];
   }
-} rnd;
+};
+inline Random rnd;
 
-int pos;
+inline int pos;
 
 class Buf {
   Array<U8> b;
@@ -197,25 +199,26 @@ public:
   }
 };
 
-int level=DEFAULT_OPTION;
-unsigned long long MEM() {
+inline int level=DEFAULT_OPTION;
+inline unsigned long long MEM() {
   return 0x10000<<level;
 }
-int y=0;
+inline int y=0;
 
-int c0=1;
-U32 b1=0, b2=0, b3=0, b4=0, b5=0, b6=0, b7=0, b8=0, tt=0, c4=0, x4=0, x5=0, w4=0, w5=0, f4=0;
-int order, bpos=0, cxtfl=3, sm_shft=7, sm_add=65535+127, sm_add_y=0;
-Buf buf;
+inline int c0=1;
+inline U32 b1=0, b2=0, b3=0, b4=0, b5=0, b6=0, b7=0, b8=0, tt=0, c4=0, x4=0, x5=0, w4=0, w5=0, f4=0;
+inline int order, bpos=0, cxtfl=3, sm_shft=7, sm_add=65535+127, sm_add_y=0;
+inline Buf buf;
 
 class Ilog {
   U8 t[65536];
 public:
   int operator()(U16 x) const {return t[x];}
   Ilog();
-} ilog;
+};
+inline Ilog ilog;
 
-Ilog::Ilog() {
+inline Ilog::Ilog() {
   U32 x=14155776;
   for (int i=2; i<65536; ++i) {
     x+=774541002/(i*2-1);
@@ -232,7 +235,7 @@ inline int llog(U32 x) {
     return ilog(x);
 }
 
-static const U8 State_table[256][4]={
+inline static const U8 State_table[256][4]={
   { 1, 2, 0, 0},{ 3, 5, 1, 0},{ 4, 6, 0, 1},{ 7, 10, 2, 0},
   { 8, 12, 1, 1},{ 9, 13, 1, 1},{ 11, 14, 0, 2},{ 15, 19, 3, 0},
   { 16, 23, 2, 1},{ 17, 24, 2, 1},{ 18, 25, 2, 1},{ 20, 27, 1, 2},
@@ -300,7 +303,7 @@ static const U8 State_table[256][4]={
 
 #define nex(state,sel) State_table[state][sel]
 
-int squash(int d) {
+inline int squash(int d) {
   static const int t[33]={
     1,2,3,6,10,16,27,45,73,120,194,310,488,747,1101,
     1546,2047,2549,2994,3348,3607,3785,3901,3975,4022,
@@ -319,9 +322,11 @@ public:
   int operator()(int p) const {
     return t[p];
   }
-} stretch;
+};
 
-Stretch::Stretch() {
+inline Stretch stretch;
+
+inline Stretch::Stretch() {
   int pi=0;
   for (int x=-2047; x<=2047; ++x) {
     int i=squash(x);
@@ -342,15 +347,15 @@ Stretch::Stretch() {
 
 #endif
 
-static int dot_product (const short* const t, const short* const w, int n);
+inline static int dot_product (const short* const t, const short* const w, int n);
 
-static void train (const short* const t, short* const w, int n, const int e);
+inline static void train (const short* const t, short* const w, int n, const int e);
 
 #if defined(__SSE2__)
 #include <emmintrin.h>
 #define OPTIMIZE "SSE2-"
 
-static int dot_product (const short* const t, const short* const w, int n) {
+inline static int dot_product (const short* const t, const short* const w, int n) {
   __m128i sum = _mm_setzero_si128 ();
   while ((n -= 8) >= 0) {
     __m128i tmp = _mm_madd_epi16 (*(__m128i *) &t[n], *(__m128i *) &w[n]);
@@ -362,7 +367,7 @@ static int dot_product (const short* const t, const short* const w, int n) {
   return _mm_cvtsi128_si32 (sum);
 }
 
-static void train (const short* const t, short* const w, int n, const int e) {
+inline static void train (const short* const t, short* const w, int n, const int e) {
   if (e) {
     const __m128i one = _mm_set1_epi16 (1);
     const __m128i err = _mm_set1_epi16 (short(e));
@@ -381,7 +386,7 @@ static void train (const short* const t, short* const w, int n, const int e) {
 #include <xmmintrin.h>
 #define OPTIMIZE "SSE-"
 
-static int dot_product (const short* const t, const short* const w, int n) {
+inline static int dot_product (const short* const t, const short* const w, int n) {
   __m64 sum = _mm_setzero_si64 ();
   while ((n -= 8) >= 0) {
     __m64 tmp = _mm_madd_pi16 (*(__m64 *) &t[n], *(__m64 *) &w[n]);
@@ -398,7 +403,7 @@ static int dot_product (const short* const t, const short* const w, int n) {
   return retval;
 }
 
-static void train (const short* const t, short* const w, int n, const int e) {
+inline static void train (const short* const t, short* const w, int n, const int e) {
   if (e) {
     const __m64 one = _mm_set1_pi16 (1);
     const __m64 err = _mm_set1_pi16 (short(e));
@@ -421,7 +426,7 @@ static void train (const short* const t, short* const w, int n, const int e) {
   }
 }
 #else
-int dot_product(short *t, short *w, int n) {
+inline int dot_product(short *t, short *w, int n) {
   int sum=0;
   n=(n+15)&-16;
   for (int i=0; i<n; i+=2)
@@ -429,7 +434,7 @@ int dot_product(short *t, short *w, int n) {
   return sum;
 }
 
-void train(short *t, short *w, int n, int err) {
+inline void train(short *t, short *w, int n, int err) {
   n=(n+15)&-16;
   for (int i=0; i<n; ++i) {
     int wt=w[i]+(((t[i]*err*2>>16)+1)>>1);
@@ -440,24 +445,24 @@ void train(short *t, short *w, int n, int err) {
 }
 #endif
 
-int num_models = 454;
-int exported_models = 338;
-int num_extra_predictions = 8 + 6;
-std::valarray<float> model_predictions(0.5, exported_models + num_extra_predictions);
-unsigned int prediction_index = 0;
-float conversion_factor = 1.0 / 4095;
+inline int num_models = 454;
+inline int exported_models = 338;
+inline int num_extra_predictions = 8 + 6;
+inline std::valarray<float> model_predictions(0.5, exported_models + num_extra_predictions);
+inline unsigned int prediction_index = 0;
+inline float conversion_factor = 1.0 / 4095;
 
-void AddPrediction(int x) {
+inline void AddPrediction(int x) {
   model_predictions[prediction_index++] = x * conversion_factor;
 }
 
-void ResetPredictions() {
+inline void ResetPredictions() {
   prediction_index = 0;
 }
 
 class Mixer {
   const int N, S, init_w;
-  std::unordered_map<unsigned int, std::unique_ptr<Array<short, 16>>> wx_;
+  emhash6::HashMap<unsigned int, std::unique_ptr<Array<short, 16>>> wx_;
 
   Array<int> cxt;
   int ncxt;
@@ -545,11 +550,11 @@ public:
   ~Mixer();
 };
 
-Mixer::~Mixer() {
+inline Mixer::~Mixer() {
   delete mp;
 }
 
-Mixer::Mixer(int n, int m, int s, int w):
+inline Mixer::Mixer(int n, int m, int s, int w):
     N((n+7)&-8), S(s), init_w(w),
     cxt(S), ncxt(0), base(0), pr(S), mp(0), tx(N), nx(0) {
   int i;
@@ -578,7 +583,7 @@ public:
   }
 };
 
-APM::APM(int n): index(0), t(n*33) {
+inline APM::APM(int n): index(0), t(n*33) {
     for (int j=0; j<33; ++j) t[j]=squash((j-16)*128)*16;
     for (int i=33; i<n*33; ++i) t[i]=t[i-33];
 }
@@ -596,7 +601,7 @@ public:
   }
 };
 
-StateMap::StateMap(): cxt(0) {
+inline StateMap::StateMap(): cxt(0) {
   for (int i=0; i<256; ++i) {
     int n0=nex(i,2);
     int n1=nex(i,3);
@@ -758,7 +763,7 @@ inline U8* ContextMap::E::get(U16 ch, int j) {
   return last=0xf0|bi, chk[bi]=ch, (U8*)memset(&bh[bi][0], 0, 7);
 }
 
-ContextMap::ContextMap(U32 m, int c): C(c), Sz((m>>6)-1), t(m>>6), cp(c), cp0(c),
+inline ContextMap::ContextMap(U32 m, int c): C(c), Sz((m>>6)-1), t(m>>6), cp(c), cp0(c),
     cxt(c), runp(c), cn(0) {
   sm=new StateMap[C];
   madvise(sm, sizeof(StateMap) * C, MADV_HUGEPAGE);
@@ -768,7 +773,7 @@ ContextMap::ContextMap(U32 m, int c): C(c), Sz((m>>6)-1), t(m>>6), cp(c), cp0(c)
   }
 }
 
-ContextMap::~ContextMap() {
+inline ContextMap::~ContextMap() {
   delete[] sm;
 }
 
@@ -779,7 +784,7 @@ inline void ContextMap::set(U32 cx) {
   cxt[i]=cx*987654323+i;
 }
 
-int ContextMap::mix1(Mixer& m, int cc, int c1, int y1) {
+inline int ContextMap::mix1(Mixer& m, int cc, int c1, int y1) {
 
   int result=0;
   for (int i=0; i<cn; ++i) {
@@ -846,7 +851,7 @@ int ContextMap::mix1(Mixer& m, int cc, int c1, int y1) {
 
 static U32 col, frstchar=0, spafdo=0, spaces=0, spacecount=0, words=0, wordcount=0, fails=0, failz=0, failcount=0;
 
-void wordModel(Mixer& m) {
+inline void wordModel(Mixer& m) {
   static U32 word0=0, word1=0, word2=0, word3=0, word4=0;
   static ContextMap cm((unsigned int)MEM()*64, 46);
   static int nl1=-3, nl=-2;
@@ -962,7 +967,7 @@ void wordModel(Mixer& m) {
   cm.mix(m);
 }
 
-void recordModel(Mixer& m) {
+inline void recordModel(Mixer& m) {
   static int cpos1[256];
   static int wpos1[0x10000];
   static ContextMap cm(32768/4, 2), cn(32768/2, 5), co(32768, 4), cp(32768*2, 3), cq(32768*4, 3);
@@ -1003,7 +1008,7 @@ void recordModel(Mixer& m) {
     cxtfl=3;
 }
 
-void sparseModel(Mixer& m) {
+inline void sparseModel(Mixer& m) {
   static ContextMap cn(MEM()*2, 5);
   static SmallStationaryContextMap scm1(0x20000,17), scm2(0x20000,12), scm3(0x20000,12),
        scm4(0x20000,13), scm5(0x10000,12), scm6(0x20000,12),
@@ -1039,11 +1044,11 @@ void sparseModel(Mixer& m) {
   scma.mix(m);
 }
 
-int primes[]={ 0, 257,251,241,239,233,229,227,223,211,199,197,193,191 };
-static U32 WRT_mpw[16]= { 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 }, tri[4]={0,4,3,7}, trj[4]={0,6,6,12};
-static U32 WRT_mtt[16]= { 0, 0, 1, 2, 3, 4, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7 };
+inline int primes[]={ 0, 257,251,241,239,233,229,227,223,211,199,197,193,191 };
+inline static U32 WRT_mpw[16]= { 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 }, tri[4]={0,4,3,7}, trj[4]={0,6,6,12};
+inline static U32 WRT_mtt[16]= { 0, 0, 1, 2, 3, 4, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7 };
 
-int contextModel2() {
+inline int contextModel2() {
   static ContextMap cm((unsigned int)MEM()*16, 7);
   static RunContextMap rcm7(MEM()/4,14), rcm9(MEM()/4,18), rcm10(MEM()/2,20);
   static Mixer m(num_models, 128*(16+14+14+12+14+16), 6, 512);
@@ -1145,9 +1150,9 @@ public:
   void update();
 };
 
-Predictor::Predictor(): pr(2048) {}
+inline Predictor::Predictor(): pr(2048) {}
 
-void Predictor::update() {
+inline void Predictor::update() {
   static APM a1(256), a2(0x8000), a3(0x8000), a4(0x20000), a5(0x10000), a6(0x10000);
 
   c0+=c0+y;
@@ -1245,22 +1250,22 @@ void Predictor::update() {
 
 }
 
-PAQ8HP::PAQ8HP(int memory) {
+inline PAQ8HP::PAQ8HP(int memory) {
   paq8hp::level = memory;
   paq8hp::buf.setsize(paq8hp::MEM()*8);
   predictor_.reset(new paq8hp::Predictor());
   madvise(predictor_.get(), sizeof(paq8hp::Predictor), MADV_HUGEPAGE);
 }
 
-const std::valarray<float>& PAQ8HP::Predict() {
+inline const std::valarray<float>& PAQ8HP::Predict() const {
   return paq8hp::model_predictions;
 }
 
-unsigned int PAQ8HP::NumOutputs() {
+inline unsigned int PAQ8HP::NumOutputs() {
   return paq8hp::model_predictions.size();
 }
 
-void PAQ8HP::Perceive(int bit) {
+inline void PAQ8HP::Perceive(int bit) {
   paq8hp::y = bit;
   if (bit) {
     paq8hp::sm_add_y = paq8hp::sm_add;
@@ -1269,4 +1274,5 @@ void PAQ8HP::Perceive(int bit) {
   }
   predictor_->update();
 }
+
 

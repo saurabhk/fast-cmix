@@ -11,14 +11,15 @@ class ByteModel : public Model {
   virtual ~ByteModel() {}
   ByteModel(const std::vector<bool>& vocab);
   const std::valarray<float>& BytePredict();
-  const std::valarray<float>& Predict();
+  const std::valarray<float>& Predict() const;
   void Perceive(int bit);
-  virtual void ByteUpdate();
 
  protected:
+  void ByteUpdate();
   int top_, mid_, bot_;
   const std::vector<bool>& vocab_;
   std::valarray<float> probs_;
 };
 
 #endif
+

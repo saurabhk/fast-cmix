@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <algorithm>
 
 namespace {
   const int kMinVocabFileSize = 10000;
@@ -43,6 +43,19 @@ int Help() {
 }
 
 void debugAllPrepare(std::string, std::string);
+
+size_t getFileSize(const std::string& path) {
+  // // get the size of the output file
+  FILE *f = fopen(path.c_str(), "rb");
+  if (f == NULL) {
+    printf("can't open file for measuring its size");
+    return 0;
+  }
+  fseek(f, 0, SEEK_END);
+  size_t output_size = ftell(f);
+  fclose(f);
+  return output_size;
+}
 
 void WriteHeader(unsigned long long length, const std::vector<bool>& vocab,
     bool dictionary_used, std::ofstream* os) {
@@ -98,11 +111,18 @@ void ReadHeader(std::ifstream* is, unsigned long long* length,
   }
 }
 
-void ExtractVocab(unsigned long long input_bytes, std::ifstream* is,
+void ExtractVocab(unsigned long long num_bytes, std::ifstream* is,
     std::vector<bool>* vocab) {
-  for (unsigned long long pos = 0; pos < input_bytes; ++pos) {
+  for (size_t pos = 0; pos < num_bytes; ++pos) {
     unsigned char c = is->get();
     (*vocab)[c] = true;
+  }
+  assert(num_bytes >= 2);
+  std::valarray<int> byte_map(0, 256);
+  uint16_t offset = 0;
+  for (int i = 0; i < 256; ++i) {
+    byte_map[i] = offset;
+    if ((*vocab)[i]) ++offset;
   }
 }
 
@@ -118,17 +138,26 @@ void Compress(unsigned long long input_bytes, std::ifstream* is,
   FILE* progress = fopen("./progress.log", "w");
   unsigned long long percent = 1 + (input_bytes / 10000);
   ClearOutput();
+  size_t buffer_size = 100 * 1024 * 1024;
+  size_t bytes_remaining = (size_t) input_bytes;
+  char* buffer = new char[buffer_size];
+  is->read(buffer, std::min(bytes_remaining, buffer_size));
+  bytes_remaining -= std::min(bytes_remaining, buffer_size);
   for (unsigned long long pos = 0; pos < input_bytes; ++pos) {
-    char c = is->get();
+    unsigned char c = buffer[pos % buffer_size];
     for (int j = 7; j >= 0; --j) {
       e.Encode((c>>j)&1);
+    }
+    if (pos % buffer_size == buffer_size - 1) {
+      is->read(buffer, std::min(bytes_remaining, buffer_size));
+      bytes_remaining -= std::min(bytes_remaining, buffer_size);
     }
     if (pos % percent == 0) {
       double frac = 100.0 * pos / input_bytes;
       fprintf(stderr, "\rprogress: %.2f%%", frac);
       fflush(stderr);
 
-      fprintf(progress, "%.2f %llu\n", frac, os->tellp());
+      fprintf(progress, "%.2f %zu\n", frac, e.OutputSize());
       fflush(progress);
     }
   }
@@ -286,7 +315,7 @@ bool RunDecompression(const std::string& input_path,
 
 int main(int argc, char** argv) {
   if ((argc != 1) && (argv[1][1] != 'h') && (argc < 4 || argc > 5 || strlen(argv[1]) != 2 || argv[1][0] != '-' ||
-      (argv[1][1] != 'c' && argv[1][1] != 'd' && argv[1][1] != 's' &&
+      (argv[1][1] != 'c' && argv[1][1] != 'd' && argv[1][1] != 'x' && argv[1][1] != 's' &&
       argv[1][1] != 'n' && argv[1][1] != 'e' ))) {
     return Help();
   }
@@ -298,7 +327,7 @@ int main(int argc, char** argv) {
   std::string output_path;
   FILE* dictionary = NULL;
 
-  
+
   if ((argc > 1) && (argv[1][1] != 'h'))  {
     if (argv[1][1] == 'n') enable_preprocess = false;
     input_path = argv[2];
@@ -323,15 +352,16 @@ int main(int argc, char** argv) {
     selfextract_decomp();
 
     // run compression
-//    std::cout << "Running cmix decompression..." << std::endl;
+    std::cout << "Running cmix decompression..." << std::endl;
     input_path = ".ready4cmix_decomp";
     output_path = ".input_decomp" ;
     dictionary = fopen(".dict_decomp", "rb");
+
     if (!RunDecompression(input_path, temp_path, output_path, dictionary,
         &input_bytes, &output_bytes)) {
       return Help();
     }
-//    std::cout << "Cmix decompression finished" << std::endl;
+    std::cout << "Cmix decompression finished" << std::endl;
 
 //    std::cout << "Prepared the decompressed file for restoring the order of articles" << std::endl;
     split4Decomp();
@@ -340,7 +370,7 @@ int main(int argc, char** argv) {
 //    std::cout << "Revert phda9 preprocessing" << std::endl;
     phda9_resto();
 
-    // change the order of articles in the input 
+    // change the order of articles in the input
 //    std::cout << "Restore article order" << std::endl;
     sort();
 
@@ -379,7 +409,7 @@ int main(int argc, char** argv) {
 //    std::cout << "Preparing enwik9 for reordering" << std::endl;
     split4Comp(input_path.c_str());
 
-    // change the order of articles in the input 
+    // change the order of articles in the input
 //    std::cout << "Reordering enwik9 articles" << std::endl;
     reorder();
 
@@ -391,9 +421,8 @@ int main(int argc, char** argv) {
 //    std::cout << "Merging all parts into one input file for cmix" << std::endl;
     cat(".main_phda9prepr", ".intro", "un1");
     cat("un1", ".coda", ".ready4cmix");
-
     // run compression
-//    std::cout << "Cmix compression..." << std::endl;
+    // std::cout << "Cmix compression..." << std::endl;
     input_path = ".ready4cmix";
     dictionary = fopen(".dict", "rb");
     if (!RunCompression(enable_preprocess, input_path, temp_path, output_path,
@@ -405,22 +434,17 @@ int main(int argc, char** argv) {
     // construct a selfextracting decompressor binary
     // archive9 = decomp_binary(upxed) + comp_dict + cmix_output + header.dat
 //    std::cout << "Constructing the selfextracting archive9" << std::endl;
+
     cat(".decomp_bin", ".dict.comp", "dec1");
 
-    // get the size of the output file
-    FILE *f = fopen(output_path.c_str(), "rb");
-    if (f == NULL) {
-      printf("can't open output file for measuring its size"), exit(1);
-    }
-    fseek(f, 0, SEEK_END);
-    size_t output_size = ftell(f);
-    fclose(f);
+    // // get the size of the output file
+    size_t output_size = getFileSize(output_path);
 
     HeaderInfo header;
     read("test.dat", header);
     header.decomp_input_size = output_size;
     write("header4archive.dat", header);
-    
+
     cat("dec1", output_path.c_str(), "dec2");
     cat("dec2", "header4archive.dat", "archive9");
 
@@ -438,11 +462,23 @@ int main(int argc, char** argv) {
     header.new_article_order_size = atoi(argv[3]);
     header.decomp_input_size = atoi(argv[4]);
     write("header.dat", header);
-//    std::cout << "Successfully created header.dat with dict_size=" << header.dict_size 
-//              << " new_article_order_size=" << header.new_article_order_size 
+//    std::cout << "Successfully created header.dat with dict_size=" << header.dict_size
+//              << " new_article_order_size=" << header.new_article_order_size
 //              << " decomp_input_size=" << header.decomp_input_size << std::endl;
     goto exit;
-  } else {
+  }  else if (argv[1][1] == 'x') {
+    // run compression
+//    std::cout << "Running cmix decompression..." << std::endl;
+    input_path = argv[2];
+    output_path = argv[3];
+    dictionary = fopen(".dict", "rb");
+    if (!RunDecompression(input_path, temp_path, output_path, dictionary,
+        &input_bytes, &output_bytes)) {
+      return Help();
+    }
+    goto print_end_message;
+  }
+  else {
     if (!RunDecompression(input_path, temp_path, output_path, dictionary,
         &input_bytes, &output_bytes)) {
       return Help();
@@ -475,7 +511,7 @@ void debugAllPrepare(std::string input_path, std::string output_path) {
     split4Comp(input_path.c_str());
 //    std::cout << __LINE__ << std::endl << std::flush;
 
-    // change the order of articles in the input 
+    // change the order of articles in the input
     reorder();
  //   std::cout << __LINE__ << std::endl << std::flush;
 
@@ -497,7 +533,7 @@ void debugAllPrepare(std::string input_path, std::string output_path) {
     phda9_resto();
 //    std::cout << __LINE__ << std::endl << std::flush;
 
-    // change the order of articles in the input 
+    // change the order of articles in the input
     sort();
 //    std::cout << __LINE__ << std::endl << std::flush;
 
@@ -507,3 +543,4 @@ void debugAllPrepare(std::string input_path, std::string output_path) {
 
 //    std::cout << "Finished" << std::endl << std::flush;
 }
+

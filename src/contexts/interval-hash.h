@@ -10,7 +10,7 @@ class IntervalHash : public Context {
   IntervalHash(const unsigned int& bit_context, const std::vector<int>& map,
       unsigned int num_bits, unsigned int order, unsigned int hash_size);
   void Update();
-  bool IsEqual(Context* c);
+  bool IsEqual(Context* c) const;
 
  private:
   const unsigned int& byte_;
@@ -20,3 +20,4 @@ class IntervalHash : public Context {
 };
 
 #endif
+

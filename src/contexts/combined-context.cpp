@@ -14,11 +14,12 @@ void CombinedContext::Update() {
   context_ = (context2_ << shift_) + context1_;
 }
 
-bool CombinedContext::IsEqual(Context* c) {
+bool CombinedContext::IsEqual(Context* c) const {
   CombinedContext* p = dynamic_cast<CombinedContext*>(c);
   if (!p) return false;
   if (&(p->context1_) != &context1_) return false;
   if (&(p->context2_) != &context2_) return false;
   return true;
 }
+
 

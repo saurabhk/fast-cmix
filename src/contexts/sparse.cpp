@@ -21,7 +21,7 @@ void Sparse::Update() {
   }
 }
 
-bool Sparse::IsEqual(Context* c) {
+bool Sparse::IsEqual(Context* c) const {
   Sparse* p = dynamic_cast<Sparse*>(c);
   if (!p) return false;
   if (&recent_contexts_ != &(p->recent_contexts_)) return false;
@@ -31,3 +31,4 @@ bool Sparse::IsEqual(Context* c) {
   }
   return true;
 }
+

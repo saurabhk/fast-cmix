@@ -10,7 +10,7 @@ class IndirectHash : public Context {
   IndirectHash(const unsigned int& bit_context, unsigned int order1,
       unsigned int hash_size1, unsigned int order2, unsigned int hash_size2);
   void Update();
-  bool IsEqual(Context* c);
+  bool IsEqual(Context* c) const;
 
  private:
   const unsigned int& byte_;
@@ -20,3 +20,4 @@ class IndirectHash : public Context {
 };
 
 #endif
+

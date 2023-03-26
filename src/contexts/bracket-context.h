@@ -3,7 +3,7 @@
 
 #include "context.h"
 
-#include <unordered_map>
+#include "../ds/emhash_map.hpp"
 #include <vector>
 
 class BracketContext : public Context {
@@ -11,13 +11,14 @@ class BracketContext : public Context {
   BracketContext(const unsigned int& bit_context, int distance_limit,
       int stack_limit);
   void Update();
-  bool IsEqual(Context* c);
+  bool IsEqual(Context* c) const;
 
  private:
   const unsigned int& byte_;
-  std::unordered_map<unsigned char, unsigned char> brackets_;
+  emhash6::HashMap<unsigned char, unsigned char> brackets_;
   unsigned int distance_limit_, stack_limit_;
   std::vector<unsigned int> active_, distance_;
 };
 
 #endif
+

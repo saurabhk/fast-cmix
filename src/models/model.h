@@ -7,14 +7,15 @@ class Model {
  public:
   Model() : outputs_(0.5, 1) {}
   Model(int size) : outputs_(0.5, size) {}
-  virtual ~Model() {}
-  virtual const std::valarray<float>& Predict() {return outputs_;}
-  virtual unsigned int NumOutputs() {return outputs_.size();}
-  virtual void Perceive(int bit) {}
-  virtual void ByteUpdate() {}
+  ~Model() {}
+  const std::valarray<float>& Predict() const {return outputs_;}
+  unsigned int NumOutputs() {return outputs_.size();}
+  void Perceive(int bit) {}
+  void ByteUpdate() {}
 
  protected:
-  std::valarray<float> outputs_;
+  mutable std::valarray<float> outputs_;
 };
 
 #endif
+

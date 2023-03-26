@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <cstdio>
 
 namespace PPMD {
 
@@ -1173,7 +1174,10 @@ void ConvertSQ( void ) {
   uint cum = 0xFFFFFF00;
 
   cnum=256;
-  for( i=0; i<256; i++ ) sqp[i]=0,trF[i]=0,trT[i]=0;
+  memset(sqp, 0, sizeof(sqp));
+  memset(trF, 0, sizeof(trF));
+  memset(trT, 0, sizeof(trT));
+  // for( i=0; i<256; i++ ) sqp[i]=0,trF[i]=0,trT[i]=0;
 
   for( i=0; i<SQ_ptr; i++ ) {
     c = SQ[i].sym; freq = SQ[i].freq; total = SQ[i].total;
@@ -1189,7 +1193,7 @@ void ConvertSQ( void ) {
     for( i=8; i!=0; i-- ) {
       j = (256+c)>>i;
       b = (c>>(i-1))&1;
-      if( b==0 ) trF[j]+=sqp[c];
+      trF[j]+= (b == 0) *sqp[c];
       trT[j]+=sqp[c];
     }
   }
@@ -1384,7 +1388,7 @@ void PPMD::ByteUpdate() {
   }
   ByteModel::ByteUpdate();
   probs_ /= probs_.sum();
-  if (mmap_to_disk && counter_ % 10000 == 0) {
+  if (mmap_to_disk && counter_ % 20000 == 0) {
     int err = munmap(ppmd_model_->HeapStart, mmap_size);
     if(err != 0) {
       exit(EXIT_FAILURE);
@@ -1399,3 +1403,4 @@ void PPMD::ByteUpdate() {
 }
 
 } // namespace PPMD
+

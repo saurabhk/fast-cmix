@@ -58,3 +58,4 @@ void Bracket::ByteUpdate() {
   }
   ByteModel::ByteUpdate();
 }
+

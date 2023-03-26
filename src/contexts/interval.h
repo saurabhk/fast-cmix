@@ -10,7 +10,7 @@ class Interval : public Context {
   Interval(const unsigned int& bit_context, const std::vector<int>& map,
       unsigned int num_bits);
   void Update();
-  bool IsEqual(Context* c);
+  bool IsEqual(Interval* c) const;
 
  private:
   const unsigned int& byte_;
@@ -20,3 +20,4 @@ class Interval : public Context {
 };
 
 #endif
+

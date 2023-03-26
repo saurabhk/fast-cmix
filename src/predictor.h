@@ -9,10 +9,30 @@
 #include "models/model.h"
 #include "models/byte-model.h"
 #include "context-manager.h"
+#include "models/direct.h"
+#include "models/direct-hash.h"
+#include "models/indirect.h"
+#include "models/match.h"
+#include "models/ppmd.h"
+#include "models/bracket.h"
+#include "models/paq8hp.h"
+#include "mixer/lstm.h"
+#include "contexts/context-hash.h"
+#include "contexts/bracket-context.h"
+#include "contexts/sparse.h"
+#include "contexts/indirect-hash.h"
+#include "contexts/interval.h"
+#include "contexts/interval-hash.h"
+#include "contexts/bit-context.h"
+#include "contexts/combined-context.h"
+
+#include "ds/SmallVector.h"
+#include "ds/emhash_set.hpp"
 
 #include <vector>
 #include <set>
 #include <memory>
+#include <optional>
 
 class Predictor {
  public:
@@ -23,11 +43,8 @@ class Predictor {
 
  private:
   unsigned long long GetNumModels();
-  void AddModel(Model* model);
-  void AddByteModel(ByteModel* model);
   void AddMixer(int layer, const unsigned long long& context,
       float learning_rate);
-  void AddByteMixer(ByteMixer* byte_mixer);
   void AddAuxiliary();
   void AddPAQ8HP();
   void AddPAQ8();
@@ -39,16 +56,24 @@ class Predictor {
   void AddDoubleIndirect();
   void AddMixers();
 
-  std::vector<std::unique_ptr<Model>> models_;
-  std::vector<std::unique_ptr<ByteModel>> byte_models_;
+  llvm::SmallVector<Indirect<Nonstationary>, 30> indirect_ns_models_; // non-stationary
+  llvm::SmallVector<Indirect<RunMap>, 1> indirect_r_models_; // run map
+  llvm::SmallVector<Direct, 1> direct_models_;
+  llvm::SmallVector<Match, 16> match_models_;
+  std::optional<PAQ8HP> paq_model_;
+  std::optional<Bracket> bracket_model_;
+  size_t auxiliary_size_ = 2; // 0 -> paq, 1 -> byte_mixer
   SSE sse_;
-  std::vector<std::unique_ptr<MixerInput>> layers_;
-  std::vector<std::vector<std::unique_ptr<Mixer>>> mixers_;
+  llvm::SmallVector<MixerInput,2> layers_;
+  llvm::SmallVector<Mixer, 25> mixer_0_;
+  llvm::SmallVector<Mixer, 25> mixer_1_;
   std::vector<unsigned int> auxiliary_;
   ContextManager manager_;
   Sigmoid sigmoid_;
-  std::vector<std::unique_ptr<ByteMixer>> byte_mixers_;
+  std::optional<PPMD::PPMD> byte_model_;
+  std::optional<ByteMixer> byte_mixer_;
   std::vector<bool> vocab_;
 };
 
 #endif
+

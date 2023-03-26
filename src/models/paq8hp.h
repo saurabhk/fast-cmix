@@ -12,7 +12,7 @@ namespace paq8hp {
 class PAQ8HP : public Model {
  public:
   PAQ8HP(int memory);
-  const std::valarray<float>& Predict();
+  const std::valarray<float>& Predict() const;
   unsigned int NumOutputs();
   void Perceive(int bit);
   void ByteUpdate() {};
@@ -20,5 +20,7 @@ class PAQ8HP : public Model {
  private:
   std::unique_ptr<paq8hp::Predictor> predictor_;
 };
+#include "paq8hp.hpp"
 
 #endif
+

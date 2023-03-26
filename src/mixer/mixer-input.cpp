@@ -20,8 +20,9 @@ void MixerInput::SetStretchedInput(int index, float p) {
   inputs_[index] = p;
 }
 
-void MixerInput::SetExtraInput(float p) {
+void MixerInput::SetExtraInput(size_t index, float p) {
   if (p > stretched_max_) p = stretched_max_;
   else if (p < stretched_min_) p = stretched_min_;
-  extra_inputs_.push_back(p);
+  extra_inputs_[index] = p;
 }
+

@@ -55,5 +55,7 @@ class LstmLayer {
       int epoch, int layer, int input_symbol,
       std::valarray<float>* hidden_error);
 };
+#include "lstm-layer.hpp"
 
 #endif
+

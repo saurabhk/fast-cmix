@@ -8,7 +8,7 @@ class BitContext : public Context {
   BitContext(const unsigned long long& bit_context, const unsigned long long&
       byte_context, unsigned long long byte_context_size);
   void Update();
-  bool IsEqual(Context* c);
+  bool IsEqual(BitContext* c) const;
 
  private:
   const unsigned long long& bit_context_;
@@ -16,3 +16,4 @@ class BitContext : public Context {
 };
 
 #endif
+

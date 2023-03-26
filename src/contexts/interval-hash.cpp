@@ -20,7 +20,7 @@ void IntervalHash::Update() {
   context_ = (context_ * (1 << hash_size_) + interval_) % size_;
 }
 
-bool IntervalHash::IsEqual(Context* c) {
+bool IntervalHash::IsEqual(Context* c) const {
   IntervalHash* p = dynamic_cast<IntervalHash*>(c);
   if (!p) return false;
   for (int i = 0; i < 256; ++i) {
@@ -30,3 +30,4 @@ bool IntervalHash::IsEqual(Context* c) {
     mask_ != p->mask_) return false;
   return true;
 }
+

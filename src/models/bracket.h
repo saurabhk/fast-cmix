@@ -3,7 +3,7 @@
 
 #include "byte-model.h"
 
-#include <unordered_map>
+#include "../ds/emhash_map.hpp"
 #include <vector>
 #include <utility>
 
@@ -14,7 +14,7 @@ class Bracket : public ByteModel {
   void ByteUpdate();
 
  private:
-  std::unordered_map<unsigned char, unsigned char> brackets_;
+  emhash6::HashMap<unsigned char, unsigned char> brackets_;
   unsigned int distance_limit_, stack_limit_, stats_limit_;
   std::vector<unsigned int> active_, distance_;
   const unsigned int& byte_;
@@ -22,3 +22,4 @@ class Bracket : public ByteModel {
 };
 
 #endif
+

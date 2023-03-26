@@ -9,7 +9,7 @@ class CombinedContext : public Context {
       context2, unsigned long long context1_size, unsigned long long
       context2_size);
   void Update();
-  bool IsEqual(Context* c);
+  bool IsEqual(Context* c) const;
 
  private:
   const unsigned long long& context1_;
@@ -18,3 +18,4 @@ class CombinedContext : public Context {
 };
 
 #endif
+

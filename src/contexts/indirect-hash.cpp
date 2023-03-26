@@ -16,7 +16,7 @@ void IndirectHash::Update() {
   context_ = hashes_[context1_];
 }
 
-bool IndirectHash::IsEqual(Context* c) {
+bool IndirectHash::IsEqual(Context* c) const {
   IndirectHash* p = dynamic_cast<IndirectHash*>(c);
   if (!p) return false;
   if (size_ == p->size_ && size1_ == p->size1_ &&
@@ -25,3 +25,4 @@ bool IndirectHash::IsEqual(Context* c) {
   }
   return false;
 }
+
