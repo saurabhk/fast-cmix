@@ -39,7 +39,7 @@ Geekbench 5 score: 1267
 ## Links where all files can be downloaded:
 Executables (or zipped source) and well-documented source code under some OSI license of (de)compressor and all other relevant files
 https://drive.google.com/drive/folders/15ChUkq7RmmoShSn_xD9K2ZRLIHK7GfIP?usp=share_link
-A (link to a) document explaining the (algorithmic) ideas that led to or are incorporated into the algorithms and their inner working
+## A (link to a) document explaining the (algorithmic) ideas that led to or are incorporated into the algorithms and their inner working
 The fast-cmix is a faster implementation of cmix-hp. It runs faster due to a bunch of different improvements leading to more optimized code. It does not rely on any new hardware to achieve faster runtime. Primarily, the following ideas led to a significant speedup in the performance of the code:
 Eliminating all the virtual function calls in the fast path. Virtual calls are indirect calls, which means that the compiler cannot inline them and some aggressive optimizations are not possible.
 Improving cache locality of the data structures by storing data next to each other and avoiding pointers where possible. Cache locality refers to the tendency of data that is used together to be stored in the same part of the CPU's cache. By storing data next to each other, the compiler was able to ensure that the data was more likely to be in the CPU's cache when it was needed, which improved performance.
