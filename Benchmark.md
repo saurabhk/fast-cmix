@@ -54,6 +54,7 @@ Performance improvement based on experiments on Intel(R) Core(TM) i7-10700 CPU @
 Overall gain
 (old_runtime - new_runtime)/old_run_time = 9.06 %
 ### cmix hp
+```
 934188796 bytes -> 113599198 bytes in 148339.69 s.
 munmap_chunk(): invalid pointer
 Command terminated by signal 6
@@ -80,8 +81,9 @@ Command terminated by signal 6
         Signals delivered: 0
         Page size (bytes): 4096
         Exit status: 0
-
+```
 ### Fast cmix
+```
 Detected block types: TEXT: 100.0%saurabhk/src/hutter/cmix-hp$
 Number of possible words: 0 vocab size: 204
 num models 403
@@ -111,7 +113,7 @@ Command terminated by signal 6
         Signals delivered: 0
         Page size (bytes): 4096
         Exit status: 0
-
+```
 
 
 
