@@ -82,7 +82,7 @@ Command terminated by signal 6
         Page size (bytes): 4096
         Exit status: 0
 ```
-### Fast cmix
+### fast-cmix
 ```
 Detected block types: TEXT: 100.0%saurabhk/src/hutter/cmix-hp$
 Number of possible words: 0 vocab size: 204
